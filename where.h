@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iterator>
-#include "closure_traits.h"
+#include "query/closure_traits.h"
 
 
 template <typename T, typename Pred>
@@ -49,11 +49,11 @@ private:
 template <typename T, typename F>
 auto where(T& t, F& f) {
     auto p = [&](auto& x, std::size_t index) {return f(x); };
-    return where_iterator<T, decltype(p)>(t, p);
+    return query(where_iterator<T, decltype(p)>(t, p));
 }
 
 
 template <typename T, typename F>
 auto where_with_index(T& t, F& f) {
-    return where_iterator<T, F>(t, f);
+    return query(where_iterator<T, F>(t, f));
 }

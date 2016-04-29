@@ -25,6 +25,7 @@ int main()
 {
     std::vector<int> v = { 0, 1, 2, 3, 4, 5, 6, 7 };
     std::vector<int> y = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    /*
     for (auto& x : where(v, [](int x) -> bool {return (x % 2) == 0; })) {
         std::cout << x << std::endl;
     }
@@ -50,7 +51,7 @@ int main()
     }
 
     std::cout << std::endl;
-    for (auto&& x : select_unzip(zip(v, y), [](auto& x, auto& y) {return x + y; })) {
+    for (auto&& x : zip(v, y).select_unzip([](const auto& x, const auto& y) {return x + y; })) {
         std::cout << x << std::endl;
     }
 
@@ -58,6 +59,20 @@ int main()
     for (auto& x : skip(v, 1).take(3)) {
         std::cout << x << std::endl;
     }
+    */
 
+    std::cout << std::endl;
+    auto v1 = query(v)
+        .skip(1)
+        .take(3)
+        .select([](const int& x) {return x + 2; })
+        .select([](const double& x) {return x + 0.4; })
+        .toStdVector();
+    for (const auto& x : v1) {
+        std::cout << x << std::endl;
+    }
+    for (const auto& x : v) {
+        std::cout << x << std::endl;
+    }
     return 0;
 }

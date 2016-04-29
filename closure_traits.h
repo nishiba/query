@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "query.h"
+#include "query/query.h"
 
 template <typename T>
 struct closure_traits {
@@ -10,7 +10,7 @@ struct closure_traits {
 
 
 template <typename T>
-struct closure_traits<query<T>> {
-    typedef query<T> type;
+struct closure_traits<Query<T>> {
+    typedef Query<T> type;
 };
 

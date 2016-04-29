@@ -1,54 +1,86 @@
 #pragma once
 
 #include <iterator>
-#include "closure_traits.h"
+#include "query/closure_traits.h"
 
 
 
-template <typename T, typename Pred>
+template <typename Iterator, typename Pred>
 class select_iterator :
-    public std::iterator<std::forward_iterator_tag, typename T::value_type> {
+    public std::iterator<std::forward_iterator_tag, typename Iterator::value_type> {
 public:
-    select_iterator(T& t, Pred& p, int i = 0)
-        : _i(i), _t(t), _p(p)
+    select_iterator(Iterator& t, Pred& p, std::size_t i)
+        : _t(t), _i(i), _p(p)
     {
     }
     bool operator!=(select_iterator& other)
     {
-        return _i != other._i;
+        return _t != other._t
+            || _i != other._i
+            || &_p != &other._p;
     }
     select_iterator& operator++()
     {
         ++_i;
+        ++_t;
         return *this;
     }
     auto operator*()
     {
-        return _p(_t[_i], _i);
-    }
-    select_iterator begin()
-    {
-        return select_iterator(_t, _p, 0);  
-    }
-    select_iterator end()
-    {
-        return select_iterator(_t, _p, _t.size());
+        return _p(*_t, _i);
     }
 private:
     int _i;
+    Iterator _t;
+    Pred& _p;
+};
+
+template <typename T, typename Pred>
+class Select {
+public:
+    typedef typename T::value_type value_type;
+public:
+    Select(T& t, Pred& p)
+        : _t(t), _p(p)
+    {
+    }
+    bool operator!=(Select& other)
+    {
+        return _t != other._t
+            || _p != other._p;
+    }
+    auto begin()
+    {
+        return this->makeIterator(_t.begin(), 0);
+    }
+    auto end()
+    {
+        return this->makeIterator(_t.end(), _t.size());
+    }
+    std::size_t size() const
+    {
+        return _t.size();
+    }
+private:
+    template <typename Iterator>
+    auto makeIterator(Iterator& t, std::size_t i) {
+        return select_iterator<Iterator, Pred>(t, _p, i);
+    }
+private:
     typename closure_traits<T>::type _t;
     Pred& _p;
 };
 
+
 template <typename T, typename F>
 auto select(T& t, F& f) {
-    auto p = [&](auto& x, std::size_t index) {return f(x); };
-    return select_iterator<T, decltype(p)>(t, p);
+    auto p = [&](const auto& x, std::size_t index) {return f(x); };
+    return query(Select<T, decltype(p)>(t, p));
 }
 
 template <typename T, typename F>
-auto select_with_index(T& t, F& f) {
-    return select_iterator<T, F>(t, f);
+auto selectWithIndex(T& t, F& f) {
+    return query(Select<T, F>(t, f));
 }
 
 template <typename T, typename F, int N = boost::tuples::length<typename T::value_type>::value>
@@ -64,9 +96,8 @@ struct select_unzip_traits<T, F, 2>
     }
 };
 
-
 template <typename T, typename F>
-auto select_unzip(T& t, F& f) {
+auto selectUnzip(T& t, F& f) {
     auto p = select_unzip_traits<T, F>::apply(t, f);
-    return select_iterator<T, decltype(p)>(t, p);
+    return query(Select<T, decltype(p)>(t, p));
 }

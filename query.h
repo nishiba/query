@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
+#include <numeric>
 #include <type_traits>
 
 
@@ -13,7 +15,9 @@ public:
 
     template <typename F>
     auto where(F& f) { return ::where(*this, f); }
-    
+    template <typename F>
+    auto whereWithIndex(F& f) { return ::whereWithIndex(*this, f); }
+
     template <typename F>
     auto select(F& f) { return ::select(*this, f); }
     template <typename F>
@@ -28,13 +32,24 @@ public:
     template <typename F>
     void applyUnzip(F& f) { ::applyUnzip(*this, f); }
 
+    template <typename F>
+    bool any(F& f) { return ::any(*this, f); }
+    template <typename V>
+    V average(V initial) { return ::average(*this, initial); }
+    template <typename V>
+    V sum(V initial) { return ::sum(*this, initial); }
+
+
     auto skip(std::size_t n) { return ::skip(_t, n); }
     auto take(std::size_t n) { return ::take(_t, n); }
+
+
     auto begin() { return _t.begin();}
     auto end() { return _t.end();}
     auto begin() const { return _t.begin(); }
     auto end() const { return _t.end(); }
-    std::size_t size() const { return _t.size(); }
+    auto size() const { return _t.size(); }
+    auto front() { return *begin(); }
 
     auto toStdVector() 
     {
@@ -62,12 +77,13 @@ Query<T> query(T&& t)
 }
 
 
-#include <tuple>
 #include "query/where.h"
 #include "query/select.h"
 #include "query/apply.h"
+#include <boost/tuple/tuple.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/iterator/zip_iterator.hpp>
+#include <boost/iterator/counting_iterator.hpp>
 
 
 template <typename ... T>
@@ -78,7 +94,27 @@ auto zip(T&... t)
     return query(boost::make_iterator_range(b, e));
 }
 
-template<typename T>
+inline auto range(int begin, int end) {
+    assert(begin < end);
+    auto b = boost::make_counting_iterator(begin);
+    auto e = boost::make_counting_iterator(end);
+    return query(boost::make_iterator_range(b, e));
+}
+
+template <typename T, typename V> inline
+V sum(T& t, V x)
+{
+    return std::accumulate(t.begin(), t.end(), x);
+}
+
+template <typename T, typename V> inline
+V average(T& t, V x) 
+{
+    return sum(t, x) / t.size();
+}
+
+
+template<typename T> inline
 auto skip(T& t, std::size_t n) {
     assert(n < t.size());
     auto b = std::begin(t);
@@ -87,7 +123,7 @@ auto skip(T& t, std::size_t n) {
     return query(boost::make_iterator_range(b, e));
 }
 
-template<typename T>
+template<typename T> inline
 auto take(T& t, std::size_t n) {
     assert(n < t.size());
     auto b = std::begin(t);
@@ -96,3 +132,8 @@ auto take(T& t, std::size_t n) {
     return query(boost::make_iterator_range(b, e));
 }
 
+
+template<typename T, typename F> inline
+bool any(T& t, F& f) {
+    return std::find_if(t.begin(), t.end(), f) != t.end();
+}

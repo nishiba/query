@@ -6,20 +6,20 @@
 
 
 template <typename Iterator, typename Pred>
-class select_iterator :
+class SelectIterator :
     public std::iterator<std::forward_iterator_tag, typename Iterator::value_type> {
 public:
-    select_iterator(Iterator& t, Pred& p, std::size_t i)
+    SelectIterator(Iterator& t, Pred& p, std::size_t i)
         : _t(t), _i(i), _p(p)
     {
     }
-    bool operator!=(select_iterator& other)
+    bool operator!=(SelectIterator& other)
     {
         return _t != other._t
             || _i != other._i
             || &_p != &other._p;
     }
-    select_iterator& operator++()
+    SelectIterator& operator++()
     {
         ++_i;
         ++_t;
@@ -64,7 +64,7 @@ public:
 private:
     template <typename Iterator>
     auto makeIterator(Iterator& t, std::size_t i) {
-        return select_iterator<Iterator, Pred>(t, _p, i);
+        return SelectIterator<Iterator, Pred>(t, _p, i);
     }
 private:
     typename closure_traits<T>::type _t;

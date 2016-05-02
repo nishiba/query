@@ -2,6 +2,7 @@
 
 #include <iterator>
 #include "query/closure_traits.h"
+#include "query/utility.h"
 
 
 template <typename T, typename F> inline
@@ -20,23 +21,10 @@ void applyWithIndex(T& t, F& f) {
     }
 }
 
-template <typename T, typename F, int N = boost::tuples::length < typename T::value_type > ::value>
-struct ApplyUnzipTraits;
-
-//TODO
-template <typename T, typename F>
-struct ApplyUnzipTraits<T, F, 2>
-{
-    static void apply(typename T::value_type& t, F& f)
-    {
-        f(t.get<0>(), t.get<1>());
-    }
-};
-
 template <typename T, typename F> inline
 void applyUnzip(T& t, F& f) {
     for (auto& a : t) {
-        ApplyUnzipTraits<T, F>::apply(a, f);
+        applyTuple(f, a);
     }
 }
 

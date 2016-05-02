@@ -46,15 +46,6 @@ public:
     Where(T& t, Pred& p) : _t(t), _p(p)
     {
     }
-    bool operator!=(Where& other)
-    {
-        return _i != other._i
-            || _t != other._t;
-    }
-    auto& operator*()
-    {
-        return _t[_i];
-    }
     auto begin()
     {
         int i = 0;

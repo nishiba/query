@@ -2,6 +2,7 @@
 
 #include <iterator>
 #include "query/closure_traits.h"
+#include "query/utility.h"
 
 
 
@@ -44,11 +45,6 @@ public:
         : _t(t), _p(p)
     {
     }
-    bool operator!=(Select& other)
-    {
-        return _t != other._t
-            || _p != other._p;
-    }
     auto begin()
     {
         return this->makeIterator(_t.begin(), 0);
@@ -83,21 +79,8 @@ auto selectWithIndex(T& t, F& f) {
     return query(Select<T, F>(t, f));
 }
 
-template <typename T, typename F, int N = boost::tuples::length<typename T::value_type>::value>
-struct select_unzip_traits;
-
-//TODO
-template <typename T, typename F>
-struct select_unzip_traits<T, F, 2> 
-{
-    static auto apply(T& t, F& f) 
-    {
-        return [&](auto& x, std::size_t index) {return f(x.get<0>(), x.get<1>()); };
-    }
-};
-
 template <typename T, typename F>
 auto selectUnzip(T& t, F& f) {
-    auto p = select_unzip_traits<T, F>::apply(t, f);
+    auto p = [&](auto& x, std::size_t index) {return applyTuple(f, x); };
     return query(Select<T, decltype(p)>(t, p));
 }

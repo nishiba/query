@@ -2,77 +2,56 @@
 //
 
 #include "stdafx.h"
-#include <vector>
+#include <tuple>
 #include <iostream>
-#include <iterator>
-#include <type_traits>
-
-#include <boost/iterator/zip_iterator.hpp>
-#include <boost/range.hpp>
-#include <boost/type_traits.hpp>
-
-#include "query.h"
 
 
+struct Buzz {
+    explicit Buzz(double x) : _x(x) { std::cout << "Buzz(double x)" << std::endl; }
+    Buzz(const Buzz& x) : _x(x._x) { std::cout << "Buzz(const Buzz& x)" << std::endl; }
+    Buzz(const Buzz&& x) : _x(x._x) { std::cout << "Buzz(const Buzz&& x)" << std::endl; }
+    double _x;
+};
 
 
+template <int N>
+struct Expand {
+    template <typename F, typename Tuple, typename... Args>
+    static void apply(F& f, Tuple& t, Args&... args)
+    {
+        std::cout << N << std::endl;
+        Expand<N - 1>::apply(f, t, std::get<N - 1>(t), args...);
+    }
+};
 
+template <>
+struct Expand<0> {
+    template <typename F, typename Tuple, typename... Args>
+    static void apply(F& f, Tuple& t, Args&... args)
+    {
+        f(args...);
+    }
+};
 
-
+template <typename F, typename Tuple>
+void apply(F& f, Tuple& t)
+{
+    std::cout << "apply" << std::endl;
+    Expand<std::tuple_size<Tuple>::value>::apply(f, t);
+}
 
 
 int main()
 {
-    std::vector<int> v = { 0, 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<int> y = { 0, 1, 2, 3, 4, 5, 6, 7 };
-    /*
-    for (auto& x : where(v, [](int x) -> bool {return (x % 2) == 0; })) {
-        std::cout << x << std::endl;
-    }
+    Buzz three(3.0);
+    auto x = std::make_tuple(1, 2.0, three);
+    auto f = [](auto& a, auto& b, auto& c) {
+        std::cout << typeid(a).name() << std::endl;
+        std::cout << typeid(b).name() << std::endl;
+        std::cout << typeid(c).name() << std::endl;
+    };
+    std::cout << "---" << std::endl;
+    apply(f, x);
 
-    std::cout << std::endl;
-    for (auto& x : where_with_index(v, [](int x, std::size_t index) -> bool {return (index < 4); })) {
-        std::cout << x << std::endl;
-    }
-
-    std::cout << std::endl;
-    for (auto& x : skip(v, 1).where([](int x) {return x < 6; })) {
-        std::cout << x << std::endl;
-    }
-
-    std::cout << std::endl;
-    for (auto x : skip(v, 1).select([](int x) {return x < 6; })) {
-        std::cout << x << std::endl;
-    }
-
-    std::cout << std::endl;
-    for (auto& x : zip(v, y).take(2)) {
-        std::cout << x.get<0>() << "," << x.get<1>() << std::endl;
-    }
-
-    std::cout << std::endl;
-    for (auto&& x : zip(v, y).select_unzip([](const auto& x, const auto& y) {return x + y; })) {
-        std::cout << x << std::endl;
-    }
-
-    std::cout << std::endl;
-    for (auto& x : skip(v, 1).take(3)) {
-        std::cout << x << std::endl;
-    }
-    */
-
-    std::cout << std::endl;
-    auto v1 = query(v)
-        .skip(1)
-        .take(3)
-        .select([](const int& x) {return x + 2; })
-        .select([](const double& x) {return x + 0.4; })
-        .toStdVector();
-    for (const auto& x : v1) {
-        std::cout << x << std::endl;
-    }
-    for (const auto& x : v) {
-        std::cout << x << std::endl;
-    }
     return 0;
 }

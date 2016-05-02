@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <numeric>
 #include <type_traits>
+#include <boost/optional.hpp>
 
 
 template<typename T>
@@ -42,6 +43,10 @@ public:
 
     auto skip(std::size_t n) { return ::skip(_t, n); }
     auto take(std::size_t n) { return ::take(_t, n); }
+    template <typename F>
+    auto takeWhile(F& f) { return ::takeWhile(*this, f); }
+    template <typename F>
+    auto takeWhileWithIndex(F& f) { return ::takeWhileWithIndex(*this, f); }
 
 
     auto begin() { return _t.begin();}
@@ -80,11 +85,12 @@ Query<T> query(T&& t)
 #include "query/where.h"
 #include "query/select.h"
 #include "query/apply.h"
+#include "query/TakeWhile.h"
 #include <boost/tuple/tuple.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/iterator/zip_iterator.hpp>
 #include <boost/iterator/counting_iterator.hpp>
-
+#include <tuple>
 
 template <typename ... T>
 auto zip(T&... t)
